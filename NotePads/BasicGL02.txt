@@ -1,0 +1,69 @@
+#include<GL/glew.h>
+
+#include<GLFW/glfw3.h>
+
+#include<iostream>
+
+int main()
+{
+	GLFWwindow * window;
+
+	glfwInit();
+	if (glfwInit()) 
+	{
+		std::cout << "GLFW WORKS" << std::endl;
+	}
+	if (!glfwInit())
+	{
+		return -1;
+	}
+	
+	window = glfwCreateWindow(640,380,"Open GL Window", NULL, NULL);
+
+	if (!window)
+	{
+		return -1;
+	}
+	
+	glfwMakeContextCurrent(window);
+
+	glewInit();
+	if (glewInit() == GLEW_OK)
+	{
+		std::cout << "GLEW WORKS" << std::endl;
+		std::cout << glGetString(GL_VERSION) << std::endl;
+	}
+	
+	float positions[6] = { -0.5f,-0.5f,
+		                    0.0f, 0.5f,
+		                    0.5f, -0.5f  };
+	unsigned int buffer;
+	glGenBuffers(1, &buffer);
+
+	/* Binds the Buffer */
+    glBindBuffer(GL_ARRAY_BUFFER , buffer );
+	
+	/* Sets the buffer Bytes */
+	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,2*sizeof(float),0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+	while (!glfwWindowShouldClose(window))
+	{
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDrawArrays(GL_TRIANGLES , 0 , 3);
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	if (glfwWindowShouldClose(window))
+	{
+		glfwTerminate();
+	}
+		return 0;
+
+}

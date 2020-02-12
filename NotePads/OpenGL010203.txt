@@ -1,0 +1,148 @@
+#include<GL/glew.h>
+
+#include<GLFW/glfw3.h>
+
+#include<iostream>
+
+/* Part 03 SHADER MAKING */
+static unsigned int CompileShader( unsigned int type , const std::string& source)
+{
+	unsigned int id = glCreateShader(type);
+	const char * str = &source[0];
+	glShaderSource(id , 1 , &str , nullptr);
+	glCompileShader(id);
+	// TODO Error Handling
+	int result;
+	glGetShaderiv(id , GL_COMPILE_STATUS , &result);
+
+	if (result == GL_FALSE)
+	{
+		int length;
+		glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+		char* message = (char*)alloca(length * sizeof(char));
+		glGetShaderInfoLog(id, length, &length, message);
+		std::cout << "Failed To Compile " <<( type == GL_VERTEX_SHADER ? "vertex" : "fragment" ) <<" Shader !" << std::endl;
+		std::cout << message << std::endl;
+		glDeleteShader(id);
+		delete[] message;
+		return 0;
+	}
+
+	return id;
+}
+static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
+{
+	unsigned int program = glCreateProgram();
+	unsigned int vs = CompileShader(GL_VERTEX_SHADER , vertexShader);
+	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
+
+	glAttachShader(program, vs);
+	glAttachShader(program, fs);
+	glLinkProgram(program);
+	glValidateProgram(program);
+
+
+	glDeleteShader(vs);
+	glDeleteShader(fs);
+
+	return program;
+}
+
+int main()
+{
+	/* Part 01 */
+	/* Window Pointer */
+	GLFWwindow * window;
+
+	glfwInit();
+	if (glfwInit()) 
+	{
+		std::cout << "GLFW WORKS" << std::endl;
+	}
+	if (!glfwInit())
+	{
+		return -1;
+	}
+	
+	/*  Window COordinates */
+	window = glfwCreateWindow(640,380,"Open GL Window", NULL, NULL);
+
+	if (!window)
+	{
+		return -1;
+	}
+	
+	/* Context to make this realistic */
+	glfwMakeContextCurrent(window);
+
+	glewInit();
+	if (glewInit() == GLEW_OK)
+	{
+		std::cout << "GLEW WORKS" << std::endl;
+		std::cout << glGetString(GL_VERSION) << std::endl;
+	}
+	/* Part 02 */
+
+	/* Vertex Points */
+	float positions[6] = { -0.5f,-0.5f,
+		                    0.0f, 0.5f,
+		                    0.5f, -0.5f  };
+	unsigned int buffer;
+	/* Generates the Buffer */
+	glGenBuffers(1, &buffer);
+
+	/* Binds the Buffer */
+    glBindBuffer(GL_ARRAY_BUFFER , buffer );
+	
+	/* Sets the buffer Bytes */
+	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+	
+	/* Enables array */
+	glEnableVertexAttribArray(0);	
+	/* indes , 2D or 3D , IF in Float then  GL_FALSE , Bytes ( strides ) , pointer */
+	glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,2*sizeof(float),0);
+	/* Binds the Buffer */
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+
+	/* Part 04 */
+	std::string vertexShader1 =
+		"#version 330 core\n"
+		"\n"
+		"layout(location = 0) in vec4 position;"
+		"\n"
+		"void main()\n"
+		"{\n"
+		" gl_Position = position;\n"
+		"}\n";
+	std::string fragmentShader1 =
+		"#version 330 core\n"
+		"\n"
+		"layout(location = 0) out vec4 color;"
+		"\n"
+		"void main()\n"
+		"{\n"
+		" color = vec4( 1.0, 0.0, 0.0, 1.0);\n"
+		"}\n";
+
+	unsigned int shader = CreateShader(vertexShader1 , fragmentShader1);
+	glUseProgram(shader);
+	while (!glfwWindowShouldClose(window))
+	{
+		/* Clears for colours */
+		glClear(GL_COLOR_BUFFER_BIT);
+		/* Shape , Index , Size */
+		glDrawArrays(GL_TRIANGLES , 0 , 3);
+
+		/* Used in Displaying */
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	if (glfwWindowShouldClose(window))
+	{
+		glfwTerminate();
+	}
+		return 0;
+
+}
